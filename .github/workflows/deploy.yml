@@ -10,19 +10,16 @@ jobs:
     migrations:
         environment: production
         runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                dotnet: ['7.0.x', '8.0.x', '9.0.x', '10.0.x']
         steps:
             - uses: actions/checkout@v5
 
             - name: Setup dotnet
               uses: actions/setup-dotnet@v5
               with:
-                  dotnet-version: ${{ matrix.dotnet }}
-            - name: Create temporary global.json
-              run: |
-                  echo '{"sdk":{"version": "${{ steps.stepid.outputs.dotnet-version }}"}}' > ./global.json
+                  dotnet-version: '8.0.x'
+
+            - name: Restore NuGet Packages
+              run: dotnet restore
 
             - name: Setup EF Tools
               working-directory: ./server
