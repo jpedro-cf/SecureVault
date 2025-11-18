@@ -10,14 +10,19 @@ jobs:
     migrations:
         environment: production
         runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                dotnet: ['7.0.x', '8.0.x', '9.0.x']
         steps:
             - uses: actions/checkout@v5
 
             - name: Setup dotnet
               uses: actions/setup-dotnet@v5
               with:
-                  dotnet-version: '8.0.x'
-              if: ${{ startswith(matrix.framework, 'net8.') }}
+                  dotnet-version: ${{ matrix.dotnet }}
+            - name: Create temporary global.json
+              run: |
+                  echo '{"sdk":{"version": "${{ steps.stepid.outputs.dotnet-version }}"}}' > ./global.json
 
             - name: Setup EF Tools
               working-directory: ./server
@@ -32,9 +37,6 @@ jobs:
                   PUBLIC_KEY: ${{ secrets.PUBLIC_KEY }}
                   PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
               run: |
-                  dotnet nuget locals all --clear
-                  dotnet restore
-                  dotnet publish -c Release -r linux-x64 --self-contained true
                   dotnet ef migrations bundle --self-contained -r linux-x64
 
             - name: Run migrations
