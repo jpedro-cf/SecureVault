@@ -19,6 +19,7 @@ jobs:
                   dotnet-version: '8.0.x'
 
             - name: Restore NuGet Packages
+              working-directory: ./server
               run: dotnet restore
 
             - name: Setup EF Tools
