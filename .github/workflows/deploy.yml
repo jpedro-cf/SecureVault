@@ -13,10 +13,15 @@ jobs:
         steps:
             - uses: actions/checkout@v5
 
+            - name: Create `global.json`
+              run: |
+                  echo '{"sdk":{"version": "8.0.300"}}' > ./global.json
+
             - name: Setup dotnet
               uses: actions/setup-dotnet@v5
               with:
                   dotnet-version: '8.0.x'
+                  global-json-file: ./global.json
 
             - name: Restore NuGet Packages
               working-directory: ./server
