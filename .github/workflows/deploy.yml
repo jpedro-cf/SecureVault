@@ -13,15 +13,20 @@ jobs:
         steps:
             - uses: actions/checkout@v5
 
+            - name: Create `global.json`
+              run: |
+                  echo '{"sdk":{"version": "8.0.120", "rollForward": "latestFeature"}}' > ./global.json
+
             - name: Setup dotnet
               uses: actions/setup-dotnet@v5
               with:
-                  dotnet-version: '8.0.x'
+                  dotnet-version: '8.0.120'
+                  global-json-file: ./global.json
 
             - name: Setup EF Tools
               working-directory: ./server
               run: |
-                  dotnet tool install --global dotnet-ef 
+                  dotnet tool install --global dotnet-ef --version 8.0.10
                   dotnet tool restore
 
             - name: Bundle EF Migrations
