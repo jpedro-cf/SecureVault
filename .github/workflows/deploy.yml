@@ -15,12 +15,12 @@ jobs:
 
             - name: Create `global.json`
               run: |
-                  echo '{"sdk":{"version": "8.0.300"}}' > ./global.json
+                  echo '{"sdk":{"version": "8.0.120", "rollForward": "latestFeature"}}' > ./global.json
 
             - name: Setup dotnet
               uses: actions/setup-dotnet@v5
               with:
-                  dotnet-version: '8.0.x'
+                  dotnet-version: '8.0.120'
                   global-json-file: ./global.json
 
             - name: Restore NuGet Packages
