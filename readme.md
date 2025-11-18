@@ -79,13 +79,35 @@ aws --endpoint <endpoint> s3api put-bucket-cors \
   --profile garage
 ```
 
-### Start the App
-
--   In your server, use the environment variables following **.env.example**
--   Pull this repository & start docker compose
+### Pull the repository
 
 ```bash
    git pull git@github.com:jpedro-cf/SecureVault.git
+```
+
+### RSA Keys Creation (For JWT)
+
+-   Create your RSA Keys and insert them in **.env** as base64 encoded.
+
+```bash
+# already in .gitignore
+mkdir -p secrets
+cd secrets
+
+openssl genrsa > private.pem
+openssl rsa -in private.pem -pubout -out public.pem
+
+# Print the base64 encoded keys so you can copy them.
+printf '%s' $($(echo cat ./public.pem) | base64) # public
+printf '%s' $($(echo cat ./private.pem) | base64) # private
+```
+
+### Start the App
+
+-   In your server, use the environment variables following **.env.example**
+-   Start docker compose
+
+```bash
    docker compose up -d
 ```
 
