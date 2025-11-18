@@ -44,7 +44,7 @@ export function UploadFilesForm({ parentId, onComplete }: Props) {
     })
 
     const { mutate, isPending } = useFilesUpload({
-        onPartUpload: (id, newProgress) => {
+        onProgress: (id, newProgress) => {
             setUploads((prev) => {
                 return {
                     ...prev,

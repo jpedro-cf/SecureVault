@@ -49,11 +49,11 @@ interface CompleteUpload {
 }
 
 interface Props {
-    onPartUpload: (id: string, newProgress: number) => void
+    onProgress: (id: string, newProgress: number) => void
     onError: (id: string) => void
     onSuccess: (id: string) => void
 }
-export function useFilesUpload({ onPartUpload, onError, onSuccess }: Props) {
+export function useFilesUpload({ onProgress, onError, onSuccess }: Props) {
     const queryClient = useQueryClient()
     const { rootKey, folderKeys, setFileKey } = useKeys()
     const { storageUsage, updateStorageUsage } = useAuth()
@@ -116,9 +116,11 @@ export function useFilesUpload({ onPartUpload, onError, onSuccess }: Props) {
                         Encoding.uint8ArrayToBase64(keyEncryptedByRoot),
                 })
 
+                onProgress(file.id, 33)
+
                 const uploadedParts = await uploadParts(
                     { ...initial, fileContent: encryptedFileContent },
-                    (progress) => onPartUpload(file.id, progress)
+                    (progress) => onProgress(file.id, progress)
                 )
 
                 const uploadedFile = await completeUpload({
@@ -127,6 +129,8 @@ export function useFilesUpload({ onPartUpload, onError, onSuccess }: Props) {
                     parts: uploadedParts,
                     uploadId: initial.uploadId,
                 })
+
+                onProgress(file.id, 100)
 
                 setFileKey(uploadedFile.id, fileEncryptionKey)
 
@@ -209,7 +213,7 @@ async function uploadParts(
                 const etag = res.headers['ETag'] || res.headers['etag']
                 completedParts.push({ ETag: etag, partNumber: u.partNumber })
 
-                callback((completedParts.length / data.urls.length) * 100)
+                callback(33 + (completedParts.length / data.urls.length) * 33)
             })
 
         offset += chunkSize
