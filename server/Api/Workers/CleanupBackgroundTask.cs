@@ -4,8 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EncryptionApp.Api.Workers;
 
-public class PeriodicBackgroundTask(
-    ILogger<PeriodicBackgroundTask> logger,
+public class CleanupBackgroundTask(
+    ILogger<CleanupBackgroundTask> logger,
     IServiceScopeFactory serviceScopeFactory,
     BackgroundTaskQueue taskQueue) : BackgroundService
 {
@@ -33,23 +33,26 @@ public class PeriodicBackgroundTask(
 
             var tasks = new List<BackgroundTask>();
             
-            var files = await ctx.Files.Where(f =>
+            var files = await ctx.Files
+                .Where(f =>
                     (f.Status == FileStatus.Pending && DateTime.UtcNow.AddHours(-3) >= f.CreatedAt)
                     || f.Status == FileStatus.Deleted)
                 .OrderBy(x => x.CreatedAt)
-                .Take(50)
+                .Take(200)
                 .Select(f => new BackgroundTask(f.Id, BackgroundTaskType.File))
                 .ToListAsync(stoppingToken);
 
-            var folders = await ctx.Folders.Where(f => f.Status == FolderStatus.Deleted)
+            var folders = await ctx.Folders
+                .Where(f => f.Status == FolderStatus.Deleted)
                 .OrderBy(x => x.CreatedAt)
-                .Take(50)
+                .Take(200)
                 .Select(f => new BackgroundTask(f.Id, BackgroundTaskType.Folder))
                 .ToListAsync(stoppingToken);
 
-            var users = await ctx.Users.Where(u => u.EmailConfirmed == false)
+            var users = await ctx.Users
+                .Where(u => u.EmailConfirmed == false)
                 .OrderBy(x => x.Id)
-                .Take(50)
+                .Take(200)
                 .Select(f => new BackgroundTask(f.Id, BackgroundTaskType.User))
                 .ToListAsync(stoppingToken);
             

@@ -2,6 +2,7 @@ using EncryptionApp.Api.Entities;
 using EncryptionApp.Api.Infra.Storage;
 using EncryptionApp.Config;
 using Microsoft.EntityFrameworkCore;
+using File = EncryptionApp.Api.Entities.File;
 
 namespace EncryptionApp.Api.Workers;
 
@@ -40,37 +41,21 @@ public class DeletionBackgroundTask(
         {
             logger.LogInformation($"Starting user '{userId}' deletion at {DateTime.UtcNow}");
             
-            var content = await ctx.Users
-                .Include(u => u.Files)
+            // not using cascade because the Amazon S3 deletion can fail.
+            // file will be deleted on HandleFile cleanup task
+            await ctx.Files
+                .Where(f => f.OwnerId == userId)
+                .ExecuteUpdateAsync(u => u
+                    .SetProperty(f => f.Status, f => FileStatus.Deleted));
+            
+            // cascade folders, shared links, storage usage, etc...
+            await ctx.Users
                 .Where(u => u.Id == userId)
-                .AsSplitQuery()
-                .Select(x => new {User = x, Files = x.Files})
-                .FirstOrDefaultAsync();
-
-            if (content == null)
-            {
-                logger.LogInformation($"User '{userId} not found. Finishing task...'");
-                return;
-            }
-
-            // cascade files, folders & shared links
-            ctx.Users.Remove(content.User);
+                .ExecuteDeleteAsync();
+            
             await ctx.SaveChangesAsync();
-            
-            var files = content.Files;
-            
-            logger.LogInformation($"Found {files.Count} items for user '{userId}' at {DateTime.UtcNow}");
-            
-            var tasks = files
-                .Select(item => 
-                    item.Status == FileStatus.Pending 
-                        ? amazonS3.AbortMultiPartUpload(item.StorageKey, item.UploadId) 
-                        : amazonS3.DeleteObject(item.StorageKey))
-                .ToList();
-            
-            await Task.WhenAll(tasks);
-
             await transaction.CommitAsync();
+            
             logger.LogInformation($"Finished user '{userId}' deletion at {DateTime.UtcNow}");
         }
         catch (Exception e)
@@ -86,14 +71,8 @@ public class DeletionBackgroundTask(
         try
         {
             logger.LogInformation($"Starting deletion of folder '{folderId}' at {DateTime.UtcNow}");
-            var folder = await ctx.Folders.FirstOrDefaultAsync(f => f.Id == folderId);
-            if (folder == null)
-            {
-                logger.LogInformation($"Folder '{folderId}' not found. Finishing task...");
-                return;
-            }
             
-            var files = await ctx.Files
+            var folderIds = await ctx.Folders
                 .FromSqlInterpolated($@"
                     WITH RECURSIVE RecursiveFolders AS (
                         SELECT ""Id"" FROM ""Folders"" WHERE ""Id"" = {folderId}
@@ -101,25 +80,23 @@ public class DeletionBackgroundTask(
                         SELECT f.""Id"" FROM ""Folders"" f
                         INNER JOIN RecursiveFolders rf ON f.""ParentFolderId"" = rf.""Id""
                     )
-                    SELECT f.* FROM ""Files"" f
-                    JOIN RecursiveFolders rf ON f.""ParentFolderId"" = rf.""Id""
+                    SELECT * FROM RecursiveFolders
                 ")
+                .Select(f => f.Id)
                 .ToListAsync();
             
-            logger.LogInformation($"Found '{files.Count}' sub files for folder '{folderId}' at {DateTime.UtcNow}");
+            // not using cascade because the Amazon S3 deletion can fail.
+            // file will be deleted on HandleFile cleanup task
+            await ctx.Files
+                .Where(f => f.ParentFolderId.HasValue && folderIds.Contains(f.ParentFolderId.Value))
+                .ExecuteUpdateAsync<File>(u =>
+                    u.SetProperty(f => f.Status, FileStatus.Deleted));
+
+            await ctx.Folders
+                .Where(f => f.Id == folderId)
+                .ExecuteDeleteAsync();
             
-            // cascade files
-            ctx.Folders.Remove(folder);
             await ctx.SaveChangesAsync();
-        
-            var tasks = files
-                .Select(item => 
-                    item.Status == FileStatus.Pending 
-                        ? amazonS3.AbortMultiPartUpload(item.StorageKey, item.UploadId) 
-                        : amazonS3.DeleteObject(item.StorageKey))
-                .ToList();
-            
-            await Task.WhenAll(tasks);
             await transaction.CommitAsync();
             
             logger.LogInformation($"Deletion of folder '{folderId}' completed at {DateTime.UtcNow}");

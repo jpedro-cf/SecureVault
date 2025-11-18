@@ -27,7 +27,7 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<User, Id
             .HasOne(f => f.Owner)
             .WithMany(u => u.Files)
             .HasForeignKey(f => f.OwnerId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.Entity<Folder>()
             .HasOne<Folder>()
@@ -39,7 +39,7 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<User, Id
             .HasOne(f => f.ParentFolder)
             .WithMany(f => f.Files)
             .HasForeignKey(f => f.ParentFolderId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.Entity<Folder>()
             .Property(f => f.Name)
@@ -70,7 +70,7 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<User, Id
             .HasConversion<string>();
         
         builder.Entity<StorageUsage>()
-            .HasIndex(s =>new { s.ContentType, s.UserId })
+            .HasIndex(s => new { s.ContentType, s.UserId })
             .IsUnique();
         
         builder.Entity<SharedLink>()

@@ -48,6 +48,7 @@ public class FoldersService(AppDbContext ctx, BackgroundTaskQueue backgroundTask
     {
         if (!string.IsNullOrEmpty(data.ShareId))
         {
+            // This could be optimized by performing background tasks, caching or a pre-computed table
             var sharedFolder = await ctx.Folders
                 .FromSqlInterpolated($@"
                     WITH RECURSIVE RecursiveFolders AS (
@@ -96,18 +97,20 @@ public class FoldersService(AppDbContext ctx, BackgroundTaskQueue backgroundTask
 
     public async Task<Result<bool>> DeleteFolder(Guid userId, Guid folderId)
     {
-        var folder = await ctx.Folders.FirstOrDefaultAsync(f => 
-            f.Id == folderId && f.OwnerId == userId && f.Status == FolderStatus.Active);
-        
-        if (folder == null)
-        {
-            return Result<bool>.Failure(new NotFoundError("Folder not found."));
-        }
-
         await using var transaction = await ctx.Database.BeginTransactionAsync();
         try
         {
-            // This could be optimized by performing background tasks, caching or a pre-computed table
+            var folder = await ctx.Folders.FirstOrDefaultAsync(f => 
+                f.Id == folderId && f.OwnerId == userId && f.Status == FolderStatus.Active);
+            
+            if (folder == null)
+            {
+                return Result<bool>.Failure(new NotFoundError("Folder not found."));
+            }
+            
+            // We're updating storage usage here because our app still too small
+            // It's a nice user experience to have updates in real time
+            // If it grows too big, just let the background tasks handle it
             var subFiles = await ctx.Files
                 .FromSqlInterpolated($@"
                     WITH RECURSIVE RecursiveFolders AS (

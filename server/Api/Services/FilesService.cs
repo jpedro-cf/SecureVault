@@ -35,6 +35,7 @@ public class FilesService(
                         JOIN RecursiveFolders rf ON f.""ParentFolderId"" = rf.""Id""
                         WHERE f.""Status"" = {nameof(FolderStatus.Active)}
                     )
+
                     SELECT f.* FROM ""Files"" f
                     JOIN RecursiveFolders rf ON f.""ParentFolderId"" = rf.""Id""
                     WHERE f.""Id"" = {fileId} AND f.""Status"" = {nameof(FileStatus.Completed)}

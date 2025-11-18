@@ -19,8 +19,4 @@ public class BaseEncryptedEntity
     // [ iv | ciphertext ]
     [Required]
     public string KeyEncryptedByRoot { get; set; }
-    
-    [Required]
-    public Guid OwnerId { get; set; }
-    public virtual User Owner { get; set; }
 }

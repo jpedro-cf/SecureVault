@@ -13,6 +13,10 @@ public class Folder : BaseEncryptedEntity
     public virtual ICollection<Folder> Folders { get; set; } = new List<Folder>();
 
     public virtual ICollection<File> Files { get; set; } = new List<File>(); 
+    
+    [Required]
+    public Guid OwnerId { get; set; }
+    public virtual User Owner { get; set; }
 
     public static Folder CreateRoot(string name, Guid ownerId, string encryptedKey, string keyEncryptedByRoot)
     {

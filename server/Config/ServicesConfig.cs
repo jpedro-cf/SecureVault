@@ -16,7 +16,7 @@ public static class ServicesConfig
         
         builder.Services.AddSingleton<BackgroundTaskQueue>();
         builder.Services.AddHostedService<DeletionBackgroundTask>();
-        builder.Services.AddHostedService<PeriodicBackgroundTask>();
+        builder.Services.AddHostedService<CleanupBackgroundTask>();
         
         builder.Services.AddTransient<StorageUsageService>();
         builder.Services.AddTransient<FilesService>();

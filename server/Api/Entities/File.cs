@@ -24,6 +24,9 @@ public class File : BaseEncryptedEntity
     
     public Guid? ParentFolderId { get; set; }
     public virtual Folder? ParentFolder { get; set; }
+    
+    public Guid? OwnerId { get; set; }
+    public virtual User? Owner { get; set; }
 }
 
 public enum FileStatus
