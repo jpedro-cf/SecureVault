@@ -23,14 +23,9 @@ jobs:
                   dotnet-version: '8.0.120'
                   global-json-file: ./global.json
 
-            - name: Restore NuGet Packages
-              working-directory: ./server
-              run: dotnet restore
-
             - name: Setup EF Tools
               working-directory: ./server
               run: |
-                  dotnet nuget locals all --clear
                   dotnet tool install --global dotnet-ef --version 8.0.10
                   dotnet tool restore
 
