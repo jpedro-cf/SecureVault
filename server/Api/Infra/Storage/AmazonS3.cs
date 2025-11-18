@@ -58,8 +58,8 @@ public class AmazonS3
             var initResponse = await _client.InitiateMultipartUploadAsync(initRequest);
             var presignedUrls = new List<PresignedPartUrl>();
             
-            const int chunkSizeMb = 100;
-            int totalParts = (int)Math.Ceiling((double)file.Size / (chunkSizeMb * 1024 * 1024));
+            const int chunkSize = 50 * 1024 * 1024; // 50mb
+            int totalParts = (int)Math.Ceiling((double)file.Size / chunkSize);
             
             for (var i = 1; i <= totalParts; i++)
             {
