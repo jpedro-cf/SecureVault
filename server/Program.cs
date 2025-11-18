@@ -9,6 +9,7 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.AddRateLimiting();
 
 builder.AddSecurityConfig();
 builder.AddIdentityConfig();
@@ -30,7 +31,8 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseExceptionHandler();
-app.UseRouting();   
+app.UseRouting();
+app.UseRateLimiter();
 app.UseCors("AllowSpecificOrigin");
 app.UseAuthorization();
 app.MapControllers();

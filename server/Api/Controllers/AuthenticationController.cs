@@ -5,17 +5,20 @@ using EncryptionApp.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace EncryptionApp.Api.Controllers;
 
 [ApiController]
 [Route("auth")]
+[EnableRateLimiting("user_limiter")]
 public class AuthenticationController(
     UsersService usersService, 
     AuthService authService, 
     SignInManager<User> signInManager) : ControllerBase
 {
     [HttpPost("register")]
+    [EnableRateLimiting("public_limiter")]
     public async Task<IResult> Register([FromBody] RegisterUserRequest data)
     {
         if (!ModelState.IsValid)
@@ -29,6 +32,7 @@ public class AuthenticationController(
     }
     
     [HttpPost("login")]
+    [EnableRateLimiting("public_limiter")]
     public async Task<IResult> Login([FromBody] LoginRequest data)
     {
         if (!ModelState.IsValid)

@@ -3,11 +3,13 @@ using EncryptionApp.Api.Dtos.Share;
 using EncryptionApp.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace EncryptionApp.Api.Controllers;
 
 [ApiController]
 [Route("shared-links")]
+[EnableRateLimiting("user_limiter")]
 public class ShareController(ShareService shareService): ControllerBase
 {
     [HttpPost]
@@ -27,7 +29,7 @@ public class ShareController(ShareService shareService): ControllerBase
     
     [HttpGet]
     [Authorize]
-    public async Task<IResult> GetALl()
+    public async Task<IResult> GetAll()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var result = await shareService.GetSharedLinks(Guid.Parse(userId));
@@ -36,6 +38,7 @@ public class ShareController(ShareService shareService): ControllerBase
     }
     
     [HttpGet("{id}")]
+    [EnableRateLimiting("public_limiter")]
     public async Task<IResult> Create([FromRoute] string id)
     {
         var result = await shareService.GetSharedContent(Guid.Parse(id));

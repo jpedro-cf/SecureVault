@@ -3,11 +3,13 @@ using EncryptionApp.Api.Dtos.Files;
 using EncryptionApp.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace EncryptionApp.Api.Controllers;
 
 [ApiController]
 [Route("files")]
+[EnableRateLimiting("user_limiter")]
 public class FilesController(FilesService filesService, UploadsService uploadsService): ControllerBase
 {
     [HttpPost("upload")]
@@ -55,6 +57,7 @@ public class FilesController(FilesService filesService, UploadsService uploadsSe
     }
     
     [HttpGet("{id}")]
+    [EnableRateLimiting("public_limiter")]
     public async Task<IResult> Get([FromRoute] string id, [FromQuery] GetFileRequest data)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);

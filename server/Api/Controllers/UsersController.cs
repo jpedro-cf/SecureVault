@@ -5,11 +5,13 @@ using Microsoft.AspNetCore.Mvc;
 using EncryptionApp.Api.Dtos.Users;
 using EncryptionApp.Api.Entities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace EncryptionApp.Api.Controllers;
 
 [ApiController]
 [Route("users")]
+[EnableRateLimiting("user_limiter")]
 public class UsersController(
     UsersService usersService, 
     StorageUsageService storageUsageService,

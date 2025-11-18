@@ -3,11 +3,13 @@ using EncryptionApp.Api.Dtos.Folders;
 using EncryptionApp.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace EncryptionApp.Api.Controllers;
 
 [ApiController]
 [Route("folders")]
+[EnableRateLimiting("user_limiter")]
 public class FoldersController(FoldersService foldersService) : ControllerBase
 {
     [HttpPost]
@@ -26,6 +28,7 @@ public class FoldersController(FoldersService foldersService) : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [EnableRateLimiting("public_limiter")]
     public async Task<IResult> GetFolder([FromRoute] Guid id, [FromQuery] GetFolderRequest data)
     {
         if (!ModelState.IsValid)
